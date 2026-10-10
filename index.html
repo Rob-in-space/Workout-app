@@ -1,0 +1,923 @@
+<title>Go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell. Top bar with tabs, main column plus a side rail on wide screens, bottom tab bar on phones. */
+/* Layout: app shell. Top bar with tabs, main column plus a side rail on wide screens, bottom tab bar on phones.
+   Look: dark-first, graphite and champagne gold, Bodoni display over Manrope, hairlines instead of shadows. */
+:root{
+  --bg:#0D0E11; --surface:#15171B; --surface-2:#1C1F25; --ink:#ECE7DD; --muted:#9B968C; --line:#2A2D33;
+  --accent:#C9A96E; --accent-ink:#141210; --accent-soft:#2A2519;
+  --gold:#D4B67C; --gold-soft:#29231A; --up:#8FC7A3; --up-soft:#15241B; --down:#E0907F; --down-soft:#2C1A17;
+  --av1:#3A4868; --av2:#2E5445; --av3:#6A394D; --av4:#76582E; --av5:#3B5A64;
+  --shadow:none; color-scheme:dark;
+  --easy:#5E8C6F; --mid:#C2A46C; --hard:#A8565A;
+  --f-display:"Bodoni Moda","Didot","Bodoni 72",Georgia,serif;
+  --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:6px;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#F1F0ED; --surface:#FFFFFF; --surface-2:#F2F0EC; --ink:#16171A; --muted:#6D6960; --line:#E0DDD6;
+  --accent:#977535; --accent-ink:#FFFFFF; --accent-soft:#F1EADC;
+  --gold:#977535; --gold-soft:#F3ECDD; --up:#2D7A50; --up-soft:#E2F0E7; --down:#A8443A; --down-soft:#F6E4E1;
+  --av1:#3A4868; --av2:#2E5445; --av3:#6A394D; --av4:#76582E; --av5:#3B5A64;
+  --shadow:0 1px 2px rgba(22,23,26,.04),0 8px 24px rgba(22,23,26,.05); color-scheme:light;
+  --easy:#5F8A6E; --mid:#BE9C5C; --hard:#A9575B;
+}}
+:root[data-theme="light"]{
+  --bg:#F1F0ED; --surface:#FFFFFF; --surface-2:#F2F0EC; --ink:#16171A; --muted:#6D6960; --line:#E0DDD6;
+  --accent:#977535; --accent-ink:#FFFFFF; --accent-soft:#F1EADC;
+  --gold:#977535; --gold-soft:#F3ECDD; --up:#2D7A50; --up-soft:#E2F0E7; --down:#A8443A; --down-soft:#F6E4E1;
+  --av1:#3A4868; --av2:#2E5445; --av3:#6A394D; --av4:#76582E; --av5:#3B5A64;
+  --shadow:0 1px 2px rgba(22,23,26,.04),0 8px 24px rgba(22,23,26,.05); color-scheme:light;
+  --easy:#5F8A6E; --mid:#BE9C5C; --hard:#A9575B;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1080px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:20px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:.01em;text-transform:uppercase;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:17px}
+.tabs{display:flex;gap:4px;flex:1}
+.tab{border:0;background:none;padding:8px 12px;border-radius:10px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:7px}
+.tab svg{width:18px;height:18px}
+.tab[aria-current="page"]{color:var(--ink);background:var(--surface-2)}
+.tab:hover{color:var(--ink)}
+.me-chip{display:flex;align-items:center;gap:8px;border:0;background:none;padding:4px}
+.xp-pill{font-family:var(--f-display);font-weight:700;font-size:15px;background:var(--gold-soft);color:var(--gold);padding:3px 9px;border-radius:999px;white-space:nowrap}
+
+/* bottom bar (phones) */
+.bottom{display:none}
+@media (max-width:760px){
+  .tabs{display:none}
+  .top-in{justify-content:space-between}
+  .bottom{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+  .bottom .tab{flex:1;flex-direction:column;gap:2px;font-size:12px;padding:6px 2px}
+  .bottom .tab svg{width:22px;height:22px}
+  main.wrap{padding-bottom:96px}
+}
+
+/* layout */
+main.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:900px){main.wrap{grid-template-columns:minmax(0,1fr)}.rail{display:none}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:16px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.05}
+h1{font-size:34px;font-weight:800;text-transform:uppercase;letter-spacing:.01em}
+h2{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+h3{font-size:18px;font-weight:700}
+.eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.muted{color:var(--muted)}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrapflex{flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 14px;border-radius:10px;font-weight:600}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn.on{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:8px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* avatar */
+.av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;position:relative}
+.av.sm{width:30px;height:30px;font-size:12px}
+.av.lg{width:76px;height:76px;font-size:26px}
+.av .lvl{position:absolute;right:-4px;bottom:-4px;background:var(--ink);color:var(--surface);font-family:var(--f-display);font-size:11px;font-weight:700;border-radius:6px;padding:0 4px;border:2px solid var(--surface);line-height:1.3}
+.av.lg .lvl{font-size:14px;padding:0 6px}
+
+/* feed post */
+.post-head{display:flex;gap:12px;align-items:center}
+.post-head .who{min-width:0}
+.post-head b{font-weight:700}
+.stats{display:flex;gap:22px;margin-top:12px;flex-wrap:wrap}
+.stat .v{font-family:var(--f-display);font-size:26px;font-weight:700;line-height:1}
+.stat .v small{font-size:15px;font-weight:600;color:var(--muted);margin-left:2px}
+.stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat.xp .v{color:var(--gold)}
+.note{margin:10px 0 0;max-width:62ch}
+.badge-type{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:999px}
+.badge-type svg{width:14px;height:14px}
+.actions{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.act{border:0;background:none;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;color:var(--muted);font-weight:600}
+.act:hover{background:var(--surface-2);color:var(--ink)}
+.act svg{width:18px;height:18px}
+.act.liked{color:var(--down)}
+.act.liked svg{fill:currentColor}
+.comments{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cmt{display:flex;gap:8px;align-items:flex-start}
+.cmt .bubble{background:var(--surface-2);padding:6px 10px;border-radius:12px;min-width:0;overflow-wrap:anywhere}
+.cmt .bubble b{font-size:13px}
+.cmt-form{display:flex;gap:8px;margin-top:8px}
+.cmt-form input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:7px 14px}
+.event{display:flex;gap:12px;align-items:center;padding:12px 16px;background:var(--surface-2);border-radius:var(--r);border:1px dashed var(--line)}
+.event .ic{width:34px;height:34px;border-radius:50%;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;flex:none}
+.event .ic svg{width:18px;height:18px}
+
+/* xp bar */
+.bar{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:999px;transition:width .6s ease}
+.bar.blue i{background:var(--accent)}
+
+/* log form */
+.types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:480px){.types{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.type-opt{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:600}
+.type-opt svg{width:26px;height:26px;color:var(--muted)}
+.type-opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.type-opt[aria-pressed="true"] svg{color:var(--accent)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:14px}
+.field input,.field textarea{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 12px;width:100%}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+input[type=range]{accent-color:var(--accent);width:100%}
+.rpe-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.xp-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:12px 16px;flex-wrap:wrap}
+.xp-preview .big{font-family:var(--f-display);font-size:38px;font-weight:800;color:var(--gold);line-height:1}
+.xp-break{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+
+/* leaderboard */
+.league-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.shield{width:64px;height:72px;flex:none}
+.lb{list-style:none;margin:0;padding:0}
+.lb li{display:grid;grid-template-columns:34px 40px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line)}
+.lb li.me{background:var(--accent-soft)}
+.lb .pos{font-family:var(--f-display);font-size:22px;font-weight:700;text-align:center}
+.lb .name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lb .pts{font-family:var(--f-display);font-size:20px;font-weight:700;text-align:right}
+.zone{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:6px 16px;border-top:1px solid var(--line)}
+.zone.up{color:var(--up);background:var(--up-soft)}
+.zone.down{color:var(--down);background:var(--down-soft)}
+.zone.mid{color:var(--muted);background:var(--surface-2)}
+.ladder{display:flex;gap:6px;flex-wrap:wrap}
+.ladder span{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.ladder span.cur{background:var(--gold-soft);color:var(--gold)}
+
+/* profile */
+.prof-head{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.counts{display:flex;gap:18px}
+.counts div{display:flex;flex-direction:column}
+.counts b{font-family:var(--f-display);font-size:22px;line-height:1}
+.counts span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.statbox{background:var(--surface-2);border-radius:12px;padding:12px}
+.statbox .v{font-family:var(--f-display);font-size:28px;font-weight:700;line-height:1}
+.statbox .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.bdg{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.bdg .medal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--gold-soft);color:var(--gold)}
+.bdg .medal svg{width:24px;height:24px}
+.bdg b{font-size:14px}
+.bdg small{font-size:12px;color:var(--muted);line-height:1.3}
+.bdg.locked{opacity:.5}
+.bdg.locked .medal{background:var(--surface-2);color:var(--muted)}
+.week{display:flex;gap:6px;align-items:flex-end;height:90px}
+.week div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.week i{display:block;width:100%;max-width:30px;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:3px}
+.week i.zero{background:var(--line)}
+.week span{font-size:11px;color:var(--muted);font-weight:600}
+
+/* calendar */
+.cap{text-transform:capitalize}
+.btn.icon{padding:5px 7px;display:grid;place-items:center}.btn.icon svg{width:18px;height:18px}
+.btn:disabled{opacity:.4;cursor:default}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.wd{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;padding-bottom:2px}
+.cd{aspect-ratio:1/1.05;max-width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:5px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;min-width:0;overflow:hidden}
+.cd.empty{border:0;background:none}
+.cd:disabled{opacity:.45;cursor:default}
+.cd.today .dn{background:var(--ink);color:var(--surface);border-radius:6px;padding:0 5px}
+.cd.sel{outline:2.5px solid var(--gold);outline-offset:-1px}
+.cd .dn{font-weight:700;font-size:13px}
+.cd .dots{display:flex;gap:3px;flex-wrap:wrap}
+.cd .dots i,.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;border:1.5px solid var(--surface)}
+.cd .mn{font-size:11px;font-weight:600;margin-top:auto}
+@media (max-width:480px){.cd .mn{display:none}.cd{padding:4px}}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.wlist{list-style:none;margin:10px 0 0;padding:0}
+.wlist li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.wlist li:first-child{border-top:0}
+.wlist .ti svg{width:22px;height:22px}
+.wlist .tx{min-width:0;font-size:14px}
+.wlist .vals{display:flex;flex-direction:column;align-items:flex-end;font-size:13px;color:var(--muted)}
+.wlist .vals b{font-family:var(--f-display);font-size:17px;color:var(--gold)}
+
+/* rail */
+.rail{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
+.sugg{display:flex;flex-direction:column;gap:10px}
+.sugg .row .name{flex:1;min-width:0}
+.sugg .row .name b{display:block;font-size:14px}
+.sugg .row .name small{color:var(--muted);font-size:12px}
+.challenge{display:flex;flex-direction:column;gap:6px}
+.challenge + .challenge{margin-top:12px}
+
+/* concept */
+.concept{max-width:68ch}
+.concept h2{margin-top:22px}
+.concept h2:first-child{margin-top:0}
+.concept p,.concept li{line-height:1.55}
+.concept ul,.concept ol{padding-left:20px;margin:8px 0}
+.concept code{font-size:13px;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.formula{background:var(--surface-2);border-radius:10px;padding:12px 14px;font-variant-numeric:tabular-nums;overflow-x:auto}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+
+/* auth */
+.auth{max-width:420px;margin:40px auto;padding-inline:16px}
+.auth .card{padding:24px;display:flex;flex-direction:column;gap:14px}
+
+/* toast */
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,420px)}
+.toast{background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:pop .3s ease;display:flex;gap:10px;align-items:center}
+.toast .tx{font-family:var(--f-display);font-size:20px;color:var(--gold)}
+@keyframes pop{from{transform:translateY(10px) scale(.96);opacity:.4}to{transform:none;opacity:1}}
+@media (min-width:761px){.toasts{bottom:24px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.demo-note{font-size:12px;color:var(--muted);text-align:center;padding:8px 0 0}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;padding:0}
+
+/* ---- eksklusivt uttrykk ---- */
+main.wrap.solo{grid-template-columns:minmax(0,720px);justify-content:center}
+.gearbtn{display:flex;align-items:center;gap:7px}.gearbtn svg{width:16px;height:16px}
+.backlink{font-size:12px;text-transform:uppercase;letter-spacing:.14em}
+.sgroup{display:flex;flex-direction:column}
+.sgroup h2{margin-bottom:6px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line);min-width:0}
+.sgroup h2+.srow{border-top:0}
+.srow>label,.srow>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.srow b{font-weight:600;font-size:14px}
+.srow small{color:var(--muted);font-size:12.5px;line-height:1.35}
+.srow input:not(.switch),.srow select{border:1px solid var(--line);background:none;border-radius:2px;padding:7px 10px;width:min(230px,52%);font-size:14px}
+.srow select{background:var(--surface)}
+.linkrow{width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;padding-inline:0;color:inherit}
+.linkrow:hover b{color:var(--gold)}
+.chev{width:16px;height:16px;color:var(--muted);flex:none}.chev svg{width:16px;height:16px}
+.switch{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;flex:none;cursor:pointer;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--ink);transition:transform .2s}
+.switch:checked{background:var(--gold)}
+.switch:checked::after{transform:translateX(18px);background:var(--accent-ink)}
+.btn.danger{background:var(--down);border-color:var(--down);color:var(--surface)}
+.btn.danger-outline{color:var(--down);border-color:color-mix(in srgb,var(--down) 50%,transparent)}
+
+.cd .ics{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.cd .ic,.legend .ic{width:18px;height:18px;display:inline-grid;place-items:center;color:var(--ink)}
+.cd .ic svg,.legend .ic svg{width:18px;height:18px;stroke-width:1.75}
+.cd .more{font-size:10px;font-weight:700;color:inherit}
+.cd.easy{--c:var(--easy)}.cd.mid{--c:var(--mid)}.cd.hard{--c:var(--hard)}
+.cd.easy,.cd.mid,.cd.hard{background:color-mix(in srgb,var(--c) 30%,var(--surface));border-color:color-mix(in srgb,var(--c) 45%,var(--surface));color:var(--ink)}
+.cd.easy .ic,.cd.mid .ic,.cd.hard .ic{color:color-mix(in srgb,var(--c) 70%,var(--ink))}
+.legend .sw{width:12px;height:12px;border-radius:2px;display:inline-block}
+.sw.easy{background:color-mix(in srgb,var(--easy) 55%,var(--surface))}.sw.mid{background:color-mix(in srgb,var(--mid) 55%,var(--surface))}.sw.hard{background:color-mix(in srgb,var(--hard) 55%,var(--surface))}
+.legend .ic{color:var(--gold)}
+.wlist .ti{color:var(--gold)}
+@media (max-width:480px){.cd .ic,.cd .ic svg{width:16px;height:16px}}
+
+body{font-size:14.5px;letter-spacing:.005em}
+.top{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.top-in{padding-block:14px}
+.brand{font-family:var(--f-display);font-weight:500;font-size:24px;letter-spacing:.1em;text-transform:uppercase;gap:0}
+.brand::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);margin-left:1px;align-self:flex-end;margin-bottom:7px}
+.av.sm .lvl{font-size:9px;padding:0 3px;right:-6px;bottom:-5px}
+.brand-mark{display:none}
+.tab{font-size:12px;text-transform:uppercase;letter-spacing:.14em;border-radius:0;padding:8px 10px;border-bottom:1px solid transparent}
+.tab svg{width:16px;height:16px;stroke-width:1.5}
+.tab[aria-current="page"]{background:none;color:var(--ink);border-bottom-color:var(--gold)}
+.bottom .tab{letter-spacing:.08em;font-size:10px;border-bottom:0}
+.bottom .tab[aria-current="page"]{color:var(--gold)}
+.bottom{background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.xp-pill{background:none;border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);color:var(--gold);font-family:var(--f-body);font-size:12px;font-weight:600;letter-spacing:.08em;padding:4px 10px}
+.card{border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:20px}
+h1{font-weight:500;font-size:40px;text-transform:none;letter-spacing:-.01em}
+h2{font-weight:500;font-size:24px;text-transform:none;letter-spacing:0}
+h3{font-weight:500;font-size:19px}
+.eyebrow,.stat .k,.statbox .k,.counts span,.wd,.zone,.ladder span{letter-spacing:.18em;font-size:11px;font-weight:600}
+.btn{border-radius:2px;text-transform:uppercase;letter-spacing:.14em;font-size:12px;padding:9px 18px;background:none}
+.btn.sm{font-size:11px;padding:6px 12px}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--accent-ink)}
+.btn.icon{padding:6px 8px}
+.seg{border-radius:2px;background:none;border:1px solid var(--line);padding:2px}
+.seg button{border-radius:1px;text-transform:uppercase;letter-spacing:.12em;font-size:11px;padding:6px 12px}
+.seg button[aria-pressed="true"]{background:var(--surface-2);box-shadow:none;color:var(--gold)}
+.av{font-family:var(--f-display);font-weight:500;color:#F3EEE4;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.av .lvl{background:var(--gold);color:var(--accent-ink);font-family:var(--f-body);font-size:10px;border-color:var(--surface);border-radius:3px}
+.stat .v,.statbox .v,.counts b,.lb .pts,.lb .pos,.xp-preview .big{font-weight:500}
+.stat .v{font-size:30px}
+.statbox{border-radius:var(--r);background:none;border:1px solid var(--line)}
+.badge-type{background:none;border:1px solid var(--line);color:var(--muted);border-radius:2px;text-transform:uppercase;letter-spacing:.12em;font-size:11px;padding:3px 9px}
+.actions{border-top-color:var(--line)}
+.act{font-size:13px}
+.act.liked{color:var(--gold)}
+.cmt .bubble{border-radius:var(--r)}
+.cmt-form input{border-radius:2px}
+.event{border-radius:var(--r);border-style:solid;background:none}
+.bar{height:4px;border:0;background:var(--line)}
+.bar i,.bar.blue i{background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 55%,var(--surface)),var(--gold))}
+.type-opt{border-width:1px;border-radius:var(--r);background:none;font-size:13px;letter-spacing:.04em}
+.type-opt svg{stroke-width:1.5}
+.type-opt[aria-pressed="true"]{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.type-opt[aria-pressed="true"] svg{color:var(--gold)}
+.field input,.field textarea{border-radius:2px;background:none}
+input[type=range]{accent-color:var(--gold)}
+.xp-preview{border-radius:var(--r);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);background:var(--gold-soft)}
+.lb li.me{background:var(--gold-soft)}
+.lb li.me .pos{color:var(--gold)}
+.zone{background:none!important;border-top-color:var(--line)}
+.ladder span{background:none;border:1px solid var(--line);border-radius:2px}
+.ladder span.cur{border-color:var(--gold);background:var(--gold-soft)}
+.bdg{border-radius:var(--r)}
+.bdg .medal{background:none;border:1px solid var(--gold)}
+.bdg.locked .medal{border-color:var(--line);background:none}
+.week i{background:var(--gold);border-radius:2px}
+.cd{border-radius:4px;background:none}
+.cd.today .dn{background:var(--gold);color:var(--accent-ink);border-radius:2px}
+.cd.sel{outline:1.5px solid var(--ink)}
+.wlist .vals b,.stat.xp .v{font-family:var(--f-display);font-weight:500}
+.toast{background:var(--surface-2);color:var(--ink);border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);border-radius:var(--r)}
+.formula,.concept code{border-radius:2px}
+.linkbtn{color:var(--gold)}
+:focus-visible{outline-color:var(--gold)}
+</style>
+
+<header class="top" id="top"></header>
+<div id="app"></div>
+<nav class="bottom" id="bottom" aria-label="Hovedmeny"></nav>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+/* ---------- icons ---------- */
+const I={
+  feed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-9-9.2C1.8 7.5 4 4.5 7.2 4.5c2 0 3.6 1.2 4.8 2.8 1.2-1.6 2.8-2.8 4.8-2.8 3.2 0 5.4 3 4.2 6.3C19 15.6 12 20 12 20z"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  run:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="4.5" r="1.8"/><path d="M8 21l3-6 3 2v5M6 12l3-4 4 1 3 4h3M11 15l-1-5"/></svg>',
+  lift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg>',
+  bike:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h6l3.5 7.5M9 9 12 16.5h-1M14 5h2l-1 4"/></svg>',
+  swim:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="7" r="1.8"/><path d="M3 18c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0M6 14l4-5 4 2 2-2"/></svg>',
+  yoga:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.8"/><path d="M12 8v6M5 10l7 2 7-2M7 20l5-6 5 6"/></svg>',
+  walk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6 3 3v3M9 12l2-4h3l2 4M12 15l-1-7"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+  flame:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 3.5 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5 .1 1.8 1 3 2.2 3.2C11 8.5 11 5 12 2z"/></svg>',
+  medal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 3h8l-2 6h-4z"/><circle cx="12" cy="15" r="6"/><path d="m12 12 .9 1.9 2 .3-1.5 1.4.4 2L12 16.7l-1.8.9.4-2-1.5-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>',
+  right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>'
+};
+
+/* ---------- domain ---------- */
+const TYPES={
+  run:{n:'Løping',ic:'run',dist:true},
+  lift:{n:'Styrke',ic:'lift',dist:false},
+  bike:{n:'Sykling',ic:'bike',dist:true},
+  swim:{n:'Svømming',ic:'swim',dist:true},
+  yoga:{n:'Yoga',ic:'yoga',dist:false},
+  walk:{n:'Gåtur',ic:'walk',dist:true}
+};
+const LEAGUES=['Bronse','Sølv','Gull','Platina','Diamant'];
+const DAY=864e5;
+
+// XP: minutter × intensitet + distansebonus, så streak-bonus. Maks 300 per økt.
+function calcXp(min,rpe,km,type,streakDays,firstToday){
+  const mult=0.5+rpe/10;
+  const base=Math.round(min*mult);
+  const distB=TYPES[type].dist?Math.round(km*(type==='bike'?0.7:type==='swim'?10:2)):0;
+  const streakPct=Math.min(streakDays,10)*5;
+  const streakB=Math.round((base+distB)*streakPct/100);
+  const dayB=firstToday?20:0;
+  const total=Math.min(300,base+distB+streakB+dayB);
+  return {base,distB,streakB,streakPct,dayB,total,capped:base+distB+streakB+dayB>300};
+}
+function xpForLevel(n){return Math.round(60*Math.pow(n-1,1.65))}
+function levelOf(xp){let n=1;while(xpForLevel(n+1)<=xp)n++;return n}
+function levelProgress(xp){const l=levelOf(xp),a=xpForLevel(l),b=xpForLevel(l+1);return {l,into:xp-a,need:b-a,pct:Math.round((xp-a)/(b-a)*100)}}
+
+/* ---------- seed data (eksempeldata) ---------- */
+function seed(){
+  const now=Date.now();
+  const U=(id,name,av,totalXp,weekXp,streak)=>({id,name,av,totalXp,weekXp,streak,init:name.split(' ').map(s=>s[0]).join('').slice(0,2)});
+  const users={
+    robin:U('robin','Robin',1,2310,385,4),
+    ingrid:U('ingrid','Ingrid Haugen',3,4120,640,12),
+    jonas:U('jonas','Jonas Berg',2,3380,520,6),
+    sofie:U('sofie','Sofie Lie',4,2950,470,3),
+    emil:U('emil','Emil Nilsen',5,2600,410,2),
+    maja:U('maja','Maja Dahl',1,2240,360,5),
+    henrik:U('henrik','Henrik Strand',2,1980,300,1),
+    thea:U('thea','Thea Bakke',3,1710,240,0),
+    oskar:U('oskar','Oskar Moen',4,1450,150,0),
+    nora:U('nora','Nora Vik',5,1200,90,0),
+    aleks:U('aleks','Aleksander Ruud',2,5200,0,0),
+    lina:U('lina','Lina Sætre',3,980,0,0)
+  };
+  const P=(id,user,hoursAgo,type,min,km,rpe,note,likes,comments)=>({id,kind:'workout',user,ts:now-hoursAgo*36e5,type,min,km,rpe,note,likes,comments,
+    xp:calcXp(min,rpe,km,type,users[user].streak,true).total});
+  const posts=[
+    P('p1','ingrid',1.2,'run',52,10.4,8,'Intervaller i Frognerparken. 6 × 1 km, siste var tung!',['jonas','sofie','maja'],[{u:'jonas',t:'Sterkt! Hvilket tempo snittet du?'},{u:'ingrid',t:'4:35 på dragene 💪'}]),
+    {id:'e1',kind:'event',user:'jonas',ts:now-2.5*36e5,text:'gikk opp til nivå 15',ic:'up'},
+    P('p2','jonas',3,'lift',65,0,7,'Bein og rygg. Ny pers i markløft: 140 kg.',['ingrid','emil','henrik','robin'],[{u:'emil',t:'Beist 🔥'}]),
+    P('p3','sofie',5,'bike',95,38,6,'Rolig langtur rundt Bygdøy med jentene.',['maja'],[]),
+    {id:'e2',kind:'event',user:'maja',ts:now-8*36e5,text:'tok merket «Morgenfugl» for 5 økter før kl. 07',ic:'medal'},
+    P('p4','robin',20,'run',34,6.2,6,'Rolig morgenjogg langs Akerselva.',['ingrid','jonas'],[{u:'ingrid',t:'Fin runde!'}]),
+    P('p5','emil',26,'swim',45,1.8,7,'Teknikkøkt i Tøyenbadet.',['sofie'],[]),
+    P('p6','maja',30,'yoga',40,0,3,'Restitusjon etter en tung uke.',['thea','nora'],[]),
+    P('p7','henrik',44,'walk',70,6.5,3,'Søndagstur opp til Vettakollen.',[],[])
+  ];
+  return {
+    users,posts,
+    following:['ingrid','jonas','sofie','maja','emil'],
+    followers:23,
+    me:{workouts:37,minutes:2140,runKm:86.4,early:2,comments:4,lastDay:dayKey(now-DAY),
+        week:[45,0,34,60,0,0,0],badges:['first','ten','streak3'],log:seedLog(now,posts)},
+    cal:{y:new Date(now).getFullYear(),m:new Date(now).getMonth(),sel:new Date(now).getDate()},
+    view:'feed',feedFilter:'following',lbScope:'league',loggedIn:true,
+    form:{type:'run',min:40,km:7,rpe:6,note:''}
+  };
+}
+// Eksempelhistorikk for Robin: ca. 3–4 økter i uka de siste 10 ukene
+function seedLog(now,posts){
+  let r=7;const rnd=()=>(r=(r*9301+49297)%233280)/233280;
+  const notes={run:['Rolig langtur','Intervaller 5 × 3 min','Tempoløp langs elva'],lift:['Overkropp','Bein og kjerne','Helkropp'],bike:['Sykkel til jobb og hjem','Spinning'],swim:['Teknikkøkt'],yoga:['Restitusjon'],walk:['Tur i marka']};
+  const types=['run','run','run','lift','lift','bike','swim','yoga','walk'];
+  const log=[];
+  for(let d=72;d>=2;d--){
+    if(rnd()>0.5)continue;
+    const t=types[Math.floor(rnd()*types.length)],T=TYPES[t];
+    const min=Math.round((25+rnd()*55)/5)*5,rpe=3+Math.floor(rnd()*6);
+    const km=T.dist?Math.round((t==='bike'?min*0.4:t==='swim'?min*0.04:t==='walk'?min*0.09:min*0.17)*10)/10:0;
+    const day=new Date(now-d*DAY);day.setHours(6+Math.floor(rnd()*13),Math.floor(rnd()*60),0,0);
+    const n=notes[t];
+    log.push({id:'h'+d,ts:day.getTime(),type:t,min,km,rpe,note:n[Math.floor(rnd()*n.length)],xp:calcXp(min,rpe,km,t,2,true).total});
+  }
+  posts.filter(p=>p.user==='robin'&&p.kind==='workout').forEach(p=>log.push({id:p.id,ts:p.ts,type:p.type,min:p.min,km:p.km,rpe:p.rpe,note:p.note,xp:p.xp}));
+  return log;
+}
+function dayKey(t){const d=new Date(t);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}
+
+/* ---------- state + persistence (kun i denne nettleseren) ---------- */
+const KEY='go-demo-v2';
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}
+if(!S||!S.users||!S.users.robin)S=seed();
+function defaultSettings(){return {email:'robin@eksempel.no',username:'robin',visibility:'followers',privateProfile:false,showOnBoards:true,
+  notif:{likes:true,comments:true,followers:true,league:true,reminder:true},reminderTime:'18:00',theme:'system',units:'km',lang:'nb',
+  conn:{strava:false,garmin:false,apple:true}}}
+if(!S.settings)S.settings=defaultSettings();
+let confirmDel=false;
+function applyTheme(){const t=S.settings.theme;if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t)}
+function dist(km){const mi=S.settings.units==='mi';const v=mi?km*0.621371:km;return (Math.round(v*10)/10).toLocaleString('nb-NO')+(mi?' mi':' km')}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const ME='robin';
+const me=()=>S.users[ME];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.round(n).toLocaleString('nb-NO');
+function ago(ts){const m=Math.round((Date.now()-ts)/6e4);if(m<1)return'nå nettopp';if(m<60)return m+' min siden';const h=Math.round(m/60);if(h<24)return h+' t siden';const d=Math.round(h/24);return d===1?'i går':d+' dager siden'}
+function av(u,cls=''){return `<span class="av ${cls}" style="background:var(--av${u.av})" aria-hidden="true">${esc(u.init)}<span class="lvl num">${levelOf(u.totalXp)}</span></span>`}
+function avPlain(u,cls='sm'){return `<span class="av ${cls}" style="background:var(--av${u.av})" aria-hidden="true">${esc(u.init)}</span>`}
+function leagueOf(){return 2} // Robin er i Gull-ligaen denne uka
+function daysLeft(){const d=new Date();const dow=(d.getDay()+6)%7;return 7-dow}
+
+/* ---------- toasts ---------- */
+function toast(html){const t=document.createElement('div');t.className='toast';t.innerHTML=html;document.getElementById('toasts').appendChild(t);setTimeout(()=>t.remove(),3200)}
+
+/* ---------- chrome ---------- */
+const NAV=[['feed','Feed','feed'],['log','Logg økt','plus'],['cal','Kalender','cal'],['rank','Rangering','trophy'],['profile','Profil','user']];
+function renderChrome(){
+  const top=document.getElementById('top'),bottom=document.getElementById('bottom');
+  if(!S.loggedIn){top.innerHTML=`<div class="top-in"><div class="brand"><span class="brand-mark">${I.flame}</span>Go</div></div>`;bottom.innerHTML='';bottom.hidden=true;return}
+  bottom.hidden=false;
+  const tabs=NAV.map(([v,l,ic])=>`<button class="tab" data-go="${v}" ${(S.view===v||(v==='profile'&&['settings','concept'].includes(S.view)))?'aria-current="page"':''}>${I[ic]}<span>${l}</span></button>`).join('');
+  const u=me();
+  top.innerHTML=`<div class="top-in">
+    <div class="brand"><span class="brand-mark">${I.flame}</span>Go</div>
+    <nav class="tabs" aria-label="Hovedmeny">${tabs}</nav>
+    <button class="me-chip" data-go="profile" aria-label="Din profil"><span class="xp-pill num">${fmt(u.totalXp)} XP</span>${av(u,'sm')}</button>
+  </div>`;
+  bottom.innerHTML=tabs;
+}
+
+/* ---------- views ---------- */
+function postHtml(p){
+  const u=S.users[p.user];
+  if(p.kind==='event'){
+    return `<div class="event"><span class="ic">${I[p.ic]}</span><div>${avPlain(u)} </div><div><b>${esc(u.name)}</b> ${esc(p.text)} <span class="muted">· ${ago(p.ts)}</span></div></div>`;
+  }
+  const T=TYPES[p.type],liked=p.likes.includes(ME);
+  const following=S.following.includes(p.user)||p.user===ME;
+  return `<article class="card pad" data-post="${p.id}">
+    <div class="post-head">${av(u)}<div class="who"><b>${esc(u.name)}</b>${!following?` <button class="linkbtn" data-follow="${u.id}">· Følg</button>`:''}<div class="muted" style="font-size:13px">${ago(p.ts)}</div></div>
+      <span class="badge-type" style="margin-left:auto">${I[T.ic]}${T.n}</span></div>
+    ${p.note?`<p class="note">${esc(p.note)}</p>`:''}
+    <div class="stats">
+      <div class="stat"><div class="v num">${p.min}<small>min</small></div><div class="k">Tid</div></div>
+      ${T.dist&&p.km?`<div class="stat"><div class="v num">${dist(p.km).split(' ')[0]}<small>${dist(p.km).split(' ')[1]}</small></div><div class="k">Distanse</div></div>`:''}
+      <div class="stat"><div class="v num">${p.rpe}<small>/10</small></div><div class="k">Innsats</div></div>
+      <div class="stat xp"><div class="v num">+${p.xp}<small>XP</small></div><div class="k">Poeng</div></div>
+    </div>
+    <div class="actions">
+      <button class="act ${liked?'liked':''}" data-like="${p.id}" aria-pressed="${liked}">${I.heart}<span class="num">${p.likes.length}</span> Heia</button>
+      <button class="act" data-focus-cmt="${p.id}">${I.chat}<span class="num">${p.comments.length}</span> Kommenter</button>
+    </div>
+    ${p.comments.length?`<div class="comments">${p.comments.map(c=>{const cu=S.users[c.u];return `<div class="cmt">${avPlain(cu)}<div class="bubble"><b>${esc(cu.name)}</b><div>${esc(c.t)}</div></div></div>`}).join('')}</div>`:''}
+    <form class="cmt-form" data-cmt="${p.id}">${avPlain(me())}<input id="cmt-${p.id}" name="t" placeholder="Skriv en kommentar…" autocomplete="off" aria-label="Kommentar"><button class="btn sm" type="submit">Send</button></form>
+  </article>`;
+}
+function viewFeed(){
+  const list=S.posts.filter(p=>S.feedFilter==='all'||p.user===ME||S.following.includes(p.user)).sort((a,b)=>b.ts-a.ts);
+  return `<div class="col">
+    <div class="row between wrapflex"><h1>Feed</h1>
+      <div class="seg" role="group" aria-label="Vis innlegg fra"><button data-filter="following" aria-pressed="${S.feedFilter==='following'}">Følger</button><button data-filter="all" aria-pressed="${S.feedFilter==='all'}">Alle</button></div></div>
+    <button class="card pad row" data-go="log" style="text-align:left;border-style:dashed;cursor:pointer">${av(me())}<span class="muted" style="flex:1">Hva trente du i dag, ${esc(me().name)}?</span><span class="btn primary sm">Logg økt</span></button>
+    ${list.map(postHtml).join('')||'<p class="muted">Ingen innlegg ennå. Følg noen for å fylle feeden.</p>'}
+  </div>`;
+}
+function viewLog(){
+  const f=S.form,T=TYPES[f.type];
+  const firstToday=S.me.lastDay!==dayKey(Date.now());
+  const x=calcXp(+f.min||0,+f.rpe,T.dist?(+f.km||0):0,f.type,me().streak,firstToday);
+  const lp=levelProgress(me().totalXp);
+  return `<div class="col">
+    <h1>Logg økt</h1>
+    <form class="card pad col" id="logform" style="gap:18px">
+      <div class="field"><span class="eyebrow">Aktivitet</span>
+        <div class="types">${Object.entries(TYPES).map(([k,t])=>`<button type="button" class="type-opt" data-type="${k}" aria-pressed="${f.type===k}">${I[t.ic]}${t.n}</button>`).join('')}</div></div>
+      <div class="grid2">
+        <div class="field"><label for="f-min">Varighet (min)</label><input id="f-min" type="number" min="1" max="600" inputmode="numeric" value="${esc(f.min)}" required></div>
+        <div class="field" ${T.dist?'':'hidden'}><label for="f-km">Distanse (km)</label><input id="f-km" type="number" min="0" step="0.1" inputmode="decimal" value="${esc(f.km)}"></div>
+      </div>
+      <div class="field"><label for="f-rpe">Innsats: <span id="rpe-v" class="num">${f.rpe}</span>/10 <span class="muted" style="font-weight:400">(RPE, hvor hardt det føltes)</span></label>
+        <input id="f-rpe" type="range" min="1" max="10" value="${f.rpe}"><div class="rpe-scale"><span>Veldig lett</span><span>Moderat</span><span>Maks</span></div></div>
+      <div class="field"><label for="f-note">Beskrivelse <span class="muted" style="font-weight:400">(valgfritt, vises i feeden)</span></label><textarea id="f-note" rows="2" placeholder="F.eks. «Ny pers på 5 km!»">${esc(f.note)}</textarea></div>
+      <div class="xp-preview" id="xp-preview">${xpPreviewHtml(x)}</div>
+      <div class="row between wrapflex"><span class="muted" style="font-size:13px">Nivå ${lp.l}: ${fmt(lp.into)} / ${fmt(lp.need)} XP</span><button class="btn primary" type="submit">Lagre og del</button></div>
+    </form>
+  </div>`;
+}
+function xpPreviewHtml(x){
+  return `<div><div class="eyebrow">Du får</div><div class="big num">+${x.total} XP</div></div>
+  <div class="xp-break num"><span>Grunnpoeng (tid × innsats): ${x.base}</span>${x.distB?`<span>Distansebonus: +${x.distB}</span>`:''}<span>Streak ${me().streak} dager: +${x.streakPct}% (+${x.streakB})</span>${x.dayB?`<span>Dagens første økt: +${x.dayB}</span>`:''}${x.capped?'<span>Tak per økt: 300 XP</span>':''}</div>`;
+}
+function shield(){return `<svg class="shield" viewBox="0 0 64 72" aria-hidden="true"><path d="M32 2 60 12v22c0 18-12 30-28 36C16 64 4 52 4 34V12z" fill="var(--gold-soft)" stroke="var(--gold)" stroke-width="3"/><path d="m32 20 4.4 9 9.9 1.4-7.2 7 1.7 9.8L32 42.6l-8.8 4.6 1.7-9.8-7.2-7 9.9-1.4z" fill="var(--gold)"/></svg>`}
+function viewRank(){
+  let rows,title;
+  const all=Object.values(S.users);
+  if(S.lbScope==='league'){rows=all.filter(u=>u.weekXp>0).sort((a,b)=>b.weekXp-a.weekXp);title='weekXp'}
+  else if(S.lbScope==='following'){rows=all.filter(u=>u.id===ME||S.following.includes(u.id)).sort((a,b)=>b.weekXp-a.weekXp);title='weekXp'}
+  else{rows=all.slice().sort((a,b)=>b.totalXp-a.totalXp);title='totalXp'}
+  const myPos=rows.findIndex(u=>u.id===ME)+1;
+  const L=leagueOf(),n=rows.length;
+  const li=(u,i)=>`<li class="${u.id===ME?'me':''}"><span class="pos num">${i+1}</span>${av(u,'sm')}<span class="name">${esc(u.name)}${u.id===ME?' (deg)':''}</span>
+    ${u.streak>=3?`<span class="muted num" title="${u.streak} dager på rad" style="display:flex;align-items:center;gap:2px;color:var(--gold)"><span style="width:14px;height:14px;display:inline-block">${I.flame}</span>${u.streak}</span>`:'<span></span>'}
+    <span class="pts num">${fmt(u[title])}<small class="muted" style="font-size:13px"> XP</small></span></li>`;
+  let list='';
+  if(S.lbScope==='league'){
+    rows.forEach((u,i)=>{
+      if(i===0)list+=`<div class="zone up">Opprykk til ${LEAGUES[L+1]}</div>`;
+      if(i===3)list+=`<div class="zone mid">Trygg sone</div>`;
+      if(i===n-3)list+=`<div class="zone down">Nedrykk til ${LEAGUES[L-1]}</div>`;
+      list+=li(u,i);
+    });
+  } else list=rows.map(li).join('');
+  const gap=myPos>3&&S.lbScope==='league'?rows[2].weekXp-me().weekXp+1:0;
+  const tot=Object.values(S.users).reduce((a,u)=>a+u.weekXp,0);
+  return `<div class="col">
+    <h1>Rangering</h1>
+    <section class="card pad league-hero">${shield()}
+      <div style="flex:1;min-width:200px"><div class="eyebrow">Ukens liga</div><h2 style="font-size:30px">${LEAGUES[L]}-ligaen</h2>
+        <div class="muted">Du ligger på <b class="num" style="color:var(--ink)">${myPos}. plass</b>. ${gap>0?`<span class="num">${fmt(gap)}</span> XP til opprykksplass.`:'Du er i opprykkssonen!'} Uka avsluttes om ${daysLeft()} ${daysLeft()===1?'dag':'dager'}.</div>
+        <div class="ladder" style="margin-top:10px">${LEAGUES.map((l,i)=>`<span class="${i===L?'cur':''}">${l}</span>`).join('')}</div></div>
+    </section>
+    <section class="card" style="overflow:hidden">
+      <div class="pad row between wrapflex"><h2>Tabell</h2>
+        <div class="seg" role="group" aria-label="Rangering"><button data-lb="league" aria-pressed="${S.lbScope==='league'}">Liga</button><button data-lb="following" aria-pressed="${S.lbScope==='following'}">Følger</button><button data-lb="all" aria-pressed="${S.lbScope==='all'}">Totalt</button></div></div>
+      <ul class="lb">${list}</ul>
+    </section>
+    <section class="card pad"><h2>Utfordringer</h2>
+      <div style="margin-top:12px">${challenges(tot)}</div></section>
+  </div>`;
+}
+function challenges(tot){
+  const wk=S.me.week.reduce((a,b)=>a+b,0);
+  const c=(t,sub,v,max,cls)=>`<div class="challenge"><div class="row between"><b>${t}</b><span class="muted num" style="font-size:13px">${fmt(Math.min(v,max))} / ${fmt(max)}</span></div><div class="bar ${cls}"><i style="width:${Math.min(100,v/max*100)}%"></i></div><small class="muted">${sub}</small></div>`;
+  return c('Ukesmål: 150 aktive minutter','Belønning: +100 XP og ett streak-skjold',wk,150,'blue')
+    +c('Fellesutfordring: 5 000 XP i Gull-ligaen','Hele ligaen får merket «Lagspiller» hvis dere klarer det',tot,5000,'')
+    +c('Oktober-løpet: 100 km','Månedsutfordring for alle som følger hverandre',S.me.runKm%100,100,'blue');
+}
+const BADGES=[
+  ['first','Første økt','Logg din første treningsøkt',s=>s.workouts>=1],
+  ['streak3','Tre på rad','Tren 3 dager på rad',(s,u)=>u.streak>=3],
+  ['streak7','Ukesstreak','Tren 7 dager på rad',(s,u)=>u.streak>=7],
+  ['ten','Ti økter','Logg 10 økter',s=>s.workouts>=10],
+  ['fifty','Femti økter','Logg 50 økter',s=>s.workouts>=50],
+  ['km100','Hundre km','Løp 100 km totalt',s=>s.runKm>=100],
+  ['early','Morgenfugl','5 økter logget før kl. 07',s=>s.early>=5],
+  ['social','Heiagjeng','Skriv 5 kommentarer',s=>s.comments>=5],
+  ['lvl10','Nivå 10','Nå nivå 10',(s,u)=>levelOf(u.totalXp)>=10]
+];
+function checkBadges(){
+  BADGES.forEach(([id,name,,test])=>{
+    if(!S.me.badges.includes(id)&&test(S.me,me())){S.me.badges.push(id);toast(`<span style="width:22px;height:22px;color:var(--gold)">${I.medal}</span> Nytt merke: ${esc(name)}`);
+      S.posts.push({id:'e'+Date.now()+id,kind:'event',user:ME,ts:Date.now(),text:`tok merket «${name}»`,ic:'medal'})}
+  });
+}
+function viewProfile(){
+  const u=me(),lp=levelProgress(u.totalXp),s=S.me;
+  const days=['Man','Tir','Ons','Tor','Fre','Lør','Søn'],max=Math.max(60,...s.week);
+  const mine=S.posts.filter(p=>p.user===ME&&p.kind==='workout').sort((a,b)=>b.ts-a.ts);
+  return `<div class="col">
+    <section class="card pad col" style="gap:16px">
+      <div class="prof-head">${av(u,'lg')}
+        <div style="flex:1;min-width:180px"><h1>${esc(u.name)}</h1><div class="muted">@robin · Oslo · Medlem siden mars 2026</div>
+          <div class="counts" style="margin-top:8px"><div><b class="num">${s.workouts}</b><span>Økter</span></div><div><b class="num">${S.followers}</b><span>Følgere</span></div><div><b class="num">${S.following.length}</b><span>Følger</span></div></div></div>
+        <button class="btn sm gearbtn" data-go="settings">${I.gear}<span>Innstillinger</span></button></div>
+      <div><div class="row between"><b>Nivå ${lp.l}</b><span class="muted num" style="font-size:13px">${fmt(lp.need-lp.into)} XP til nivå ${lp.l+1}</span></div><div class="bar" style="margin-top:6px"><i style="width:${lp.pct}%"></i></div></div>
+      <div class="statgrid">
+        <div class="statbox"><div class="v num" style="color:var(--gold)">${fmt(u.totalXp)}</div><div class="k">XP totalt</div></div>
+        <div class="statbox"><div class="v num">${u.streak}</div><div class="k">Dager på rad</div></div>
+        <div class="statbox"><div class="v num">${fmt(s.minutes/60)}</div><div class="k">Timer trent</div></div>
+        <div class="statbox"><div class="v num">${dist(s.runKm).split(' ')[0]}</div><div class="k">${S.settings.units==='mi'?'Miles':'Km'} løpt</div></div>
+      </div>
+    </section>
+    <section class="card pad"><div class="row between"><h2>Denne uka</h2><span class="muted num">${S.me.week.reduce((a,b)=>a+b,0)} min</span></div>
+      <div class="week" style="margin-top:12px">${s.week.map((m,i)=>`<div><span class="num">${m||''}</span><i class="${m?'':'zero'}" style="height:${m?Math.max(6,m/max*64):3}px"></i><span>${days[i]}</span></div>`).join('')}</div></section>
+    <section class="card pad"><h2>Merker</h2><div class="badges" style="margin-top:12px">
+      ${BADGES.map(([id,n,d])=>{const has=s.badges.includes(id);return `<div class="bdg ${has?'':'locked'}"><span class="medal">${has?I.medal:I.lock}</span><b>${n}</b><small>${d}</small></div>`}).join('')}</div></section>
+    <h2 style="margin-top:6px">Mine økter</h2>
+    ${mine.map(postHtml).join('')}
+    <p class="demo-note">Dette er en prototype med eksempeldata. Det du gjør lagres bare i din nettleser. <button class="linkbtn" data-reset>Tilbakestill demoen</button></p>
+  </div>`;
+}
+const TCOL={run:1,lift:4,bike:2,swim:5,yoga:3,walk:2};
+function viewCal(){
+  const c=S.cal,y=c.y,m=c.m,now=new Date();
+  const first=new Date(y,m,1),start=(first.getDay()+6)%7,dim=new Date(y,m+1,0).getDate();
+  const inMonth=S.me.log.filter(w=>{const d=new Date(w.ts);return d.getFullYear()===y&&d.getMonth()===m}).sort((a,b)=>a.ts-b.ts);
+  const byDay={};inMonth.forEach(w=>{const k=new Date(w.ts).getDate();(byDay[k]=byDay[k]||[]).push(w)});
+  const isThisMonth=now.getFullYear()===y&&now.getMonth()===m;
+  let sel=c.sel;if(!sel||sel>dim)sel=isThisMonth?now.getDate():(+Object.keys(byDay).pop()||1);
+  const monthName=first.toLocaleString('nb-NO',{month:'long',year:'numeric'});
+  const sum=(k)=>inMonth.reduce((a,w)=>a+(w[k]||0),0);
+  const activeDays=Object.keys(byDay).length;
+  let cells='';
+  for(let i=0;i<start;i++)cells+='<div class="cd empty" aria-hidden="true"></div>';
+  for(let d=1;d<=dim;d++){
+    const ws=byDay[d]||[],mins=ws.reduce((a,w)=>a+w.min,0);
+    const today=isThisMonth&&d===now.getDate(),future=new Date(y,m,d)>now;
+    const maxRpe=ws.reduce((a,w)=>Math.max(a,+w.rpe),0),lvl=!ws.length?'':maxRpe<=4?'easy':maxRpe<=7?'mid':'hard';
+    cells+=`<button class="cd ${lvl} ${today?'today':''} ${d===sel?'sel':''}" data-cal-day="${d}" ${future?'disabled':''} aria-label="${d}. ${esc(monthName)}: ${ws.length?ws.length+' økt'+(ws.length>1?'er':'')+', '+mins+' min':'ingen økter'}" aria-pressed="${d===sel}">
+      <span class="dn num">${d}</span>${ws.length?`<span class="ics">${[...new Set(ws.map(w=>w.type))].slice(0,2).map(t=>`<span class="ic" title="${TYPES[t].n}">${I[TYPES[t].ic]}</span>`).join('')}${new Set(ws.map(w=>w.type)).size>2?'<span class="more num">+'+(new Set(ws.map(w=>w.type)).size-2)+'</span>':''}</span><span class="mn num">${mins} min</span>`:''}</button>`;
+  }
+  const selWs=byDay[sel]||[];
+  const selDate=new Date(y,m,sel).toLocaleDateString('nb-NO',{weekday:'long',day:'numeric',month:'long'});
+  const row=w=>{const T=TYPES[w.type];const d=new Date(w.ts);return `<li><span class="ti">${I[T.ic]}</span>
+    <div class="tx"><b>${T.n}</b> <span class="muted">· ${d.toLocaleDateString('nb-NO',{day:'numeric',month:'short'})} kl. ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span>${w.note?`<div class="muted">${esc(w.note)}</div>`:''}</div>
+    <span class="num vals">${w.min} min${w.km?` · ${dist(w.km)}`:''}<b>+${w.xp} XP</b></span></li>`};
+  const legend=Object.entries(TYPES).map(([k,t])=>`<span><span class="ic">${I[t.ic]}</span>${t.n}</span>`).join('');
+  return `<div class="col">
+    <h1>Kalender</h1>
+    <section class="card pad col" style="gap:14px">
+      <div class="row between wrapflex">
+        <div class="row" style="gap:6px"><button class="btn sm icon" data-cal-nav="-1" aria-label="Forrige måned">${I.left}</button>
+          <h2 class="cap" style="min-width:150px;text-align:center">${esc(monthName)}</h2>
+          <button class="btn sm icon" data-cal-nav="1" aria-label="Neste måned" ${isThisMonth?'disabled':''}>${I.right}</button></div>
+        ${isThisMonth?'':'<button class="btn sm" data-cal-today>I dag</button>'}
+      </div>
+      <div class="statgrid">
+        <div class="statbox"><div class="v num">${inMonth.length}</div><div class="k">Økter</div></div>
+        <div class="statbox"><div class="v num">${activeDays}</div><div class="k">Aktive dager</div></div>
+        <div class="statbox"><div class="v num">${(sum('min')/60).toFixed(1).replace('.',',')}</div><div class="k">Timer</div></div>
+        <div class="statbox"><div class="v num" style="color:var(--gold)">${fmt(sum('xp'))}</div><div class="k">XP</div></div>
+      </div>
+      <div class="calgrid" role="group" aria-label="Dager i ${esc(monthName)}">${['Man','Tir','Ons','Tor','Fre','Lør','Søn'].map(d=>`<div class="wd">${d}</div>`).join('')}${cells}</div>
+      <div class="legend">${legend}</div>
+      <div class="legend int"><span><i class="sw easy"></i>Lett (innsats 1–4)</span><span><i class="sw mid"></i>Middels (5–7)</span><span><i class="sw hard"></i>Ekstra hard (8–10)</span></div>
+    </section>
+    <section class="card pad"><h2>${esc(selDate.charAt(0).toUpperCase()+selDate.slice(1))}</h2>
+      ${selWs.length?`<ul class="wlist">${selWs.map(row).join('')}</ul>`:`<p class="muted" style="margin:8px 0 0">Ingen økter denne dagen. ${isThisMonth&&sel===now.getDate()?'<button class="linkbtn" data-go="log">Logg en økt</button>':''}</p>`}</section>
+    <section class="card pad"><h2>Alle økter i ${esc(first.toLocaleString('nb-NO',{month:'long'}))}</h2>
+      ${inMonth.length?`<ul class="wlist">${inMonth.slice().reverse().map(row).join('')}</ul>`:'<p class="muted" style="margin:8px 0 0">Ingen økter denne måneden.</p>'}</section>
+  </div>`;
+}
+function viewSettings(){
+  const t=S.settings;
+  const sw=(path,label,sub)=>{const v=path.split('.').reduce((o,k)=>o[k],t);const id='s-'+path.replace('.','-');
+    return `<div class="srow"><label for="${id}"><b>${label}</b>${sub?`<small>${sub}</small>`:''}</label><input type="checkbox" class="switch" id="${id}" data-set="${path}" ${v?'checked':''}></div>`};
+  const sel=(path,label,opts,sub)=>{const id='s-'+path;return `<div class="srow"><label for="${id}"><b>${label}</b>${sub?`<small>${sub}</small>`:''}</label><select id="${id}" data-set="${path}">${opts.map(([v,l])=>`<option value="${v}" ${t[path]===v?'selected':''}>${l}</option>`).join('')}</select></div>`};
+  const conn=(k,name,sub)=>`<div class="srow"><div><b>${name}</b><small>${t.conn[k]?'Tilkoblet. Økter importeres automatisk':sub}</small></div><button class="btn sm ${t.conn[k]?'':'primary'}" data-connect="${k}">${t.conn[k]?'Koble fra':'Koble til'}</button></div>`;
+  const link=(go,label,sub)=>`<button class="srow linkrow" ${go?`data-go="${go}"`:'data-noop'}><div><b>${label}</b>${sub?`<small>${sub}</small>`:''}</div><span class="chev">${I.chev}</span></button>`;
+  return `<div class="col">
+    <div><button class="linkbtn backlink" data-go="profile">← Profil</button><h1 style="margin-top:8px">Innstillinger</h1></div>
+    <section class="card pad sgroup"><h2>Konto</h2>
+      <div class="srow"><label for="s-name"><b>Navn</b></label><input id="s-name" data-set-name value="${esc(me().name)}"></div>
+      <div class="srow"><label for="s-username"><b>Brukernavn</b></label><input id="s-username" data-set="username" value="${esc(t.username)}"></div>
+      <div class="srow"><label for="s-email"><b>E-post</b></label><input id="s-email" type="email" data-set="email" value="${esc(t.email)}"></div>
+      ${link('','Endre passord','Sist endret for 3 måneder siden')}
+    </section>
+    <section class="card pad sgroup"><h2>Personvern</h2>
+      ${sel('visibility','Hvem kan se øktene mine',[['all','Alle'],['followers','Bare følgere'],['me','Bare meg']])}
+      ${sw('privateProfile','Privat profil','Nye følgere må godkjennes av deg')}
+      ${sw('showOnBoards','Vis meg i rangeringen','Slår du av, deltar du ikke i ukens liga')}
+      ${link('','Blokkerte brukere','Ingen blokkert')}
+    </section>
+    <section class="card pad sgroup"><h2>Varsler</h2>
+      ${sw('notif.likes','Heia på økta mi')}
+      ${sw('notif.comments','Kommentarer')}
+      ${sw('notif.followers','Nye følgere')}
+      ${sw('notif.league','Liga og rangering','Opprykk, nedrykk og når noen går forbi deg')}
+      ${sw('notif.reminder','Påminnelse om å trene','Hvis du ikke har trent i løpet av dagen')}
+      ${t.notif.reminder?`<div class="srow"><label for="s-reminderTime"><b>Tidspunkt for påminnelse</b></label><input id="s-reminderTime" type="time" data-set="reminderTime" value="${esc(t.reminderTime)}"></div>`:''}
+    </section>
+    <section class="card pad sgroup"><h2>Utseende og enheter</h2>
+      ${sel('theme','Tema',[['system','Følg enheten'],['dark','Mørkt'],['light','Lyst']])}
+      ${sel('units','Distanse',[['km','Kilometer'],['mi','Miles']])}
+      ${sel('lang','Språk',[['nb','Norsk (bokmål)'],['nn','Norsk (nynorsk)'],['en','English']],'Bare norsk bokmål er med i prototypen')}
+    </section>
+    <section class="card pad sgroup"><h2>Tilkoblede apper</h2>
+      ${conn('strava','Strava','Importer løp og sykkelturer')}
+      ${conn('garmin','Garmin Connect','Importer økter fra klokka')}
+      ${conn('apple','Apple Health','Importer økter og skritt')}
+    </section>
+    <section class="card pad sgroup"><h2>Om Go</h2>
+      ${link('concept','Konsept','Poengsystem, ligaer, teknologi og plan')}
+      ${link('','Vilkår for bruk')}
+      ${link('','Personvernerklæring')}
+      ${link('','Hjelp og kontakt')}
+      <div class="srow"><div><b>Versjon</b></div><span class="muted num">0.1 (prototype)</span></div>
+    </section>
+    <section class="card pad sgroup">
+      <div class="srow"><div><b>Logg ut</b><small>Du kan logge inn igjen når som helst</small></div><button class="btn sm" data-logout>Logg ut</button></div>
+      <div class="srow"><div><b>Slett konto</b><small>${confirmDel?'Er du sikker? Alle økter, poeng og følgere slettes for godt.':'Sletter kontoen og alle dataene dine'}</small></div>
+        ${confirmDel?'<div class="row" style="gap:6px"><button class="btn sm" data-del-cancel>Avbryt</button><button class="btn sm danger" data-del-yes>Slett</button></div>':'<button class="btn sm danger-outline" data-del>Slett konto</button>'}</div>
+    </section>
+  </div>`;
+}
+function viewConcept(){
+  return `<div class="col"><article class="card pad concept">
+  <button class="linkbtn backlink" data-go="settings">← Innstillinger</button>
+  <div class="eyebrow" style="margin-top:12px">Utkast 1 · oktober 2026</div><h1 style="margin:4px 0 14px">Go: konsept</h1>
+  <p>En treningsapp der du logger økter, følger venner og konkurrerer i ukentlige ligaer. Målet er å gjøre det morsommere å trene jevnt, ikke bare hardt.</p>
+  <h2>Kjernefunksjoner</h2>
+  <ul>
+    <li><b>Brukerkonto.</b> Registrering med e-post eller Google/Apple, profil med bilde, by og mål. Personvern per økt: offentlig, kun følgere eller privat.</li>
+    <li><b>Sosialt.</b> Følge andre, feed med økter fra de du følger, «Heia» (likes), kommentarer og forslag til folk du kanskje kjenner.</li>
+    <li><b>Kalender.</b> Månedsoversikt over alle øktene dine, med aktivitet per dag og totaler for måneden.</li>
+    <li><b>Logging.</b> Aktivitet, varighet, distanse, innsats (RPE 1–10) og beskrivelse. Senere: import fra Strava, Garmin og Apple Health.</li>
+    <li><b>Gamifisering.</b> XP og nivåer, streaks, merker, ukentlige ligaer med opp- og nedrykk, og utfordringer alene eller sammen.</li>
+  </ul>
+  <h2>Poengsystem</h2>
+  <div class="formula">XP = tid (min) × (0,5 + innsats/10) + distansebonus<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ streak-bonus (5 % per dag, maks 50 %) + 20 for dagens første økt<br>Tak: 300 XP per økt</div>
+  <p>Innsats teller, så en hard styrkeøkt gir like mye som en rolig løpetur av samme lengde. Taket hindrer at én ekstrem økt avgjør en hel uke.</p>
+  <h2>Ligaer</h2>
+  <p>Hver uke plasseres brukerne i grupper på rundt 10–30 personer på samme nivå. Rangeringen er på ukens XP, slik at nye brukere har en reell sjanse. Topp 3 rykker opp, bunn 3 rykker ned, og alt nullstilles mandag.</p>
+  <div class="table-wrap"><table><thead><tr><th>Liga</th><th>Typisk ukes-XP</th></tr></thead><tbody>
+  <tr><td>Bronse</td><td class="num">0–150</td></tr><tr><td>Sølv</td><td class="num">150–300</td></tr><tr><td>Gull</td><td class="num">300–550</td></tr><tr><td>Platina</td><td class="num">550–800</td></tr><tr><td>Diamant</td><td class="num">800+</td></tr></tbody></table></div>
+  <h2>Rettferdighet og juks</h2>
+  <ul><li>Tak per økt og per dag.</li><li>Økter importert fra klokke eller app merkes som verifisert, og kan gi litt ekstra.</li><li>Andre brukere kan flagge urealistiske økter.</li></ul>
+  <h2>Foreslått teknologi</h2>
+  <ul><li>App: React Native med Expo (iOS og Android fra én kodebase).</li><li>Backend: Supabase (Postgres, innlogging, lagring av bilder, sanntid for feed).</li><li>Ligaberegning: planlagt jobb hver mandag som plasserer brukerne i nye grupper.</li><li>Push-varsler for heia, kommentarer og «du er i ferd med å rykke ned».</li></ul>
+  <h2>Forslag til rekkefølge</h2>
+  <ol><li>Konto, profil og logging av økter.</li><li>Følge, feed, heia og kommentarer.</li><li>XP, nivåer og streaks.</li><li>Ukentlige ligaer og merker.</li><li>Utfordringer, import fra klokker og varsler.</li></ol>
+  <h2>Åpne spørsmål</h2>
+  <ul><li>Hva skal appen hete?</li><li>Er målgruppen alle, eller en nisje (f.eks. studenter, løpere, treningssentre)?</li><li>Skal man kunne lage private ligaer med venner eller jobben?</li><li>Gratis med abonnement for ekstra funksjoner, eller helt gratis?</li></ul>
+  </article></div>`;
+}
+function rail(){
+  const sugg=Object.values(S.users).filter(u=>u.id!==ME&&!S.following.includes(u.id)).slice(0,4);
+  const lp=levelProgress(me().totalXp);
+  return `<aside class="rail">
+    <section class="card pad col" style="gap:10px"><div class="row">${av(me())}<div><b>${esc(me().name)}</b><div class="muted" style="font-size:13px">Nivå ${lp.l} · ${LEAGUES[leagueOf()]}-ligaen</div></div></div>
+      <div class="bar"><i style="width:${lp.pct}%"></i></div>
+      <div class="row between" style="font-size:13px"><span class="muted num">${fmt(lp.into)} / ${fmt(lp.need)} XP</span><span class="num" style="color:var(--gold);font-weight:700;display:flex;gap:3px;align-items:center"><span style="width:14px;height:14px">${I.flame}</span>${me().streak} dager</span></div></section>
+    <section class="card pad"><h3>Folk du kanskje kjenner</h3><div class="sugg" style="margin-top:10px">
+      ${sugg.map(u=>`<div class="row">${av(u,'sm')}<div class="name"><b>${esc(u.name)}</b><small>Nivå ${levelOf(u.totalXp)}</small></div><button class="btn sm" data-follow="${u.id}">Følg</button></div>`).join('')||'<span class="muted">Du følger alle!</span>'}
+    </div></section>
+    <section class="card pad"><h3>Utfordringer</h3><div style="margin-top:10px">${challenges(Object.values(S.users).reduce((a,u)=>a+u.weekXp,0))}</div></section>
+  </aside>`;
+}
+function viewAuth(){
+  return `<div class="auth"><form class="card" id="authform">
+    <h1>Velkommen til Go</h1><p class="muted" style="margin:0">Tren, del og klatre i ligaen sammen med vennene dine.</p>
+    <div class="field"><label for="a-name">Navn</label><input id="a-name" value="Robin" autocomplete="name"></div>
+    <div class="field"><label for="a-mail">E-post</label><input id="a-mail" type="email" placeholder="deg@eksempel.no" autocomplete="email"></div>
+    <div class="field"><label for="a-pw">Passord</label><input id="a-pw" type="password" placeholder="Minst 8 tegn" autocomplete="new-password"></div>
+    <button class="btn primary" type="submit">Opprett konto</button>
+    <div class="row" style="gap:8px"><button type="button" class="btn" style="flex:1" data-login>Fortsett med Google</button><button type="button" class="btn" style="flex:1" data-login>Fortsett med Apple</button></div>
+    <p class="muted" style="font-size:13px;margin:0">Har du konto? <button type="button" class="linkbtn" data-login>Logg inn</button> · Prototype: ingen data sendes noe sted.</p>
+  </form></div>`;
+}
+
+/* ---------- render ---------- */
+const app=document.getElementById('app');
+function render(){
+  applyTheme();
+  renderChrome();
+  if(!S.loggedIn){app.innerHTML=viewAuth();return}
+  const v={feed:viewFeed,log:viewLog,rank:viewRank,profile:viewProfile,concept:viewConcept,cal:viewCal,settings:viewSettings}[S.view]||viewFeed;
+  const noRail=['settings','concept'].includes(S.view);
+  app.innerHTML=`<main class="wrap ${noRail?'solo':''}">${v()}${noRail?'':rail()}</main>`;
+}
+
+/* ---------- actions ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  const d=t.dataset;
+  if(d.go){S.view=d.go;save();render();window.scrollTo({top:0});return}
+  if(d.filter){S.feedFilter=d.filter;save();render();return}
+  if(d.calNav){const c=S.cal;c.m+=+d.calNav;if(c.m<0){c.m=11;c.y--}if(c.m>11){c.m=0;c.y++}c.sel=null;save();render();return}
+  if(d.calDay){S.cal.sel=+d.calDay;save();render();return}
+  if('calToday' in d){const n=new Date();S.cal={y:n.getFullYear(),m:n.getMonth(),sel:n.getDate()};save();render();return}
+  if(d.lb){S.lbScope=d.lb;save();render();return}
+  if(d.like){const p=S.posts.find(p=>p.id===d.like);const i=p.likes.indexOf(ME);i>=0?p.likes.splice(i,1):p.likes.push(ME);save();render();return}
+  if(d.focusCmt){const el=document.getElementById('cmt-'+d.focusCmt);el&&el.focus();return}
+  if(d.follow){S.following.push(d.follow);toast(`Du følger nå ${esc(S.users[d.follow].name)}`);save();render();return}
+  if(d.type){S.form.type=d.type;save();render();return}
+  if('logout' in d){S.loggedIn=false;S.view='feed';save();render();return}
+  if(d.connect){const k=d.connect;S.settings.conn[k]=!S.settings.conn[k];save();render();toast(S.settings.conn[k]?'Tilkoblet':'Koblet fra');return}
+  if('del' in d){confirmDel=true;render();return}
+  if('delCancel' in d){confirmDel=false;render();return}
+  if('delYes' in d){confirmDel=false;S=seed();S.settings=defaultSettings();S.loggedIn=false;save();render();toast('Kontoen er slettet. Demoen er tilbakestilt');return}
+  if('noop' in d){toast('Ikke med i prototypen ennå');return}
+  if('login' in d){S.loggedIn=true;save();render();toast('Logget inn som Robin');return}
+  if('reset' in d){S=seed();save();render();toast('Demoen er tilbakestilt');return}
+});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if('setName' in el.dataset){const v=el.value.trim();if(v){me().name=v;me().init=v.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();save();render();toast('Navnet er lagret')}return}
+  const path=el.dataset.set;if(!path)return;
+  const keys=path.split('.'),last=keys.pop(),obj=keys.reduce((o,k)=>o[k],S.settings);
+  obj[last]=el.type==='checkbox'?el.checked:el.value;
+  save();
+  if(['theme','units','notif.reminder'].includes(path)){render()}
+  else toast('Lagret');
+});
+document.addEventListener('input',e=>{
+  if(!e.target.closest('#logform'))return;
+  const f=S.form;
+  f.min=document.getElementById('f-min').value;f.km=document.getElementById('f-km').value;f.rpe=document.getElementById('f-rpe').value;f.note=document.getElementById('f-note').value;
+  document.getElementById('rpe-v').textContent=f.rpe;
+  const T=TYPES[f.type];
+  document.getElementById('xp-preview').innerHTML=xpPreviewHtml(calcXp(+f.min||0,+f.rpe,T.dist?(+f.km||0):0,f.type,me().streak,S.me.lastDay!==dayKey(Date.now())));
+  save();
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  const form=e.target;
+  if(form.id==='authform'){S.loggedIn=true;S.view='feed';save();render();toast('Konto opprettet. Velkommen!');return}
+  if(form.dataset.cmt){
+    const v=form.t.value.trim();if(!v)return;
+    S.posts.find(p=>p.id===form.dataset.cmt).comments.push({u:ME,t:v});S.me.comments++;checkBadges();save();render();return;
+  }
+  if(form.id==='logform'){
+    const f=S.form,T=TYPES[f.type],min=Math.max(1,Math.min(600,+f.min||0)),km=T.dist?Math.max(0,+f.km||0):0,rpe=+f.rpe;
+    const today=dayKey(Date.now()),firstToday=S.me.lastDay!==today;
+    const u=me();
+    if(firstToday){u.streak=S.me.lastDay===dayKey(Date.now()-DAY)?u.streak+1:1;S.me.lastDay=today}
+    const x=calcXp(min,rpe,km,f.type,u.streak,firstToday);
+    const before=levelOf(u.totalXp),oldPos=rankPos();
+    u.totalXp+=x.total;u.weekXp+=x.total;
+    S.me.workouts++;S.me.minutes+=min;if(f.type==='run')S.me.runKm+=km;if(new Date().getHours()<7)S.me.early++;
+    S.me.week[(new Date().getDay()+6)%7]+=min;
+    const pid='p'+Date.now();
+    S.posts.push({id:pid,kind:'workout',user:ME,ts:Date.now(),type:f.type,min,km,rpe,note:f.note.trim(),likes:[],comments:[],xp:x.total});
+    S.me.log.push({id:pid,ts:Date.now(),type:f.type,min,km,rpe,note:f.note.trim(),xp:x.total});
+    const nd=new Date();S.cal={y:nd.getFullYear(),m:nd.getMonth(),sel:nd.getDate()};
+    const after=levelOf(u.totalXp),newPos=rankPos();
+    toast(`<span class="tx num">+${x.total} XP</span> Økta er delt i feeden`);
+    if(after>before){setTimeout(()=>toast(`<span class="tx">Nivå ${after}!</span> Du gikk opp et nivå`),500);S.posts.push({id:'e'+Date.now(),kind:'event',user:ME,ts:Date.now()+1,text:`gikk opp til nivå ${after}`,ic:'up'})}
+    if(newPos<oldPos)setTimeout(()=>toast(`Du klatret til ${newPos}. plass i ${LEAGUES[leagueOf()]}-ligaen`),1000);
+    // Simulert respons fra en venn, så det sosiale føles levende
+    const post=S.posts[S.posts.length-(after>before?2:1)];
+    setTimeout(()=>{post.likes.push('ingrid');save();if(S.view==='feed')render();toast('Ingrid Haugen heiet på økta di')},2600);
+    checkBadges();
+    S.form.note='';S.view='feed';save();render();window.scrollTo({top:0});
+  }
+});
+function rankPos(){return Object.values(S.users).filter(u=>u.weekXp>0).sort((a,b)=>b.weekXp-a.weekXp).findIndex(u=>u.id===ME)+1}
+
+render();
+})();
+</script>
